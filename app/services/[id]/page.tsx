@@ -17,24 +17,36 @@ export default async function ServiceDetailPage({ params }: PageProps) {
 
   return (
     <div className="container mx-auto p-4">
-      <div className="flex justify-between items-center mb-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
         <h1 className="text-3xl font-bold">Service Details</h1>
         <Link href={`/services/${service.id}/edit`} className="btn btn-warning">
           Edit Service
         </Link>
       </div>
-      
-      <div className="card bg-base-100 shadow-xl">
-        <div className="card-body">
-          <h2 className="card-title">{service.name}</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+      {/* Card */}
+      <div className="card bg-base-100 shadow-lg rounded-lg overflow-hidden">
+        <div className="card-body p-6 space-y-4">
+          <h2 className="card-title text-2xl">{service.name}</h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Description */}
             <div>
-              <p><strong>Description:</strong></p>
-              <p>{service.description || "No description available"}</p>
+              <h3 className="font-semibold mb-1">Description</h3>
+              <p className="text-gray-700">
+                {service.description || "No description available."}
+              </p>
             </div>
-            <div>
-              <p><strong>Duration:</strong> {service.duration} minutes</p>
-              <p><strong>Price:</strong> ${service.price.toFixed(2)}</p>
+
+            {/* Duration & Price */}
+            <div className="flex flex-col gap-2">
+              <div>
+                <span className="font-semibold">Duration:</span> {service.duration} min
+              </div>
+              <div>
+                <span className="font-semibold">Price:</span> ${service.price.toFixed(2)}
+              </div>
             </div>
           </div>
         </div>

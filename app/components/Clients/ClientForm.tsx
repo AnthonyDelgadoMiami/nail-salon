@@ -91,21 +91,21 @@ export default function ClientForm({ client }: ClientFormProps) {
   };
 
   return (
-    <div className="max-w-2xl mx-auto">
-      <h2 className="text-2xl font-bold mb-6">
+    <div className="max-w-2xl mx-auto px-4 sm:px-0">
+      <h2 className="text-2xl font-bold mb-6 text-center sm:text-left">
         {client ? 'Edit Client' : 'Add New Client'}
       </h2>
-      
+
       {error && (
         <div className="alert alert-error mb-4">
           <span>{error}</span>
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="card bg-base-100 shadow-xl">
+      <form onSubmit={handleSubmit} className="card bg-base-100 shadow-lg rounded-lg">
         <div className="card-body">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="form-control">
+            <div className="form-control w-full">
               <label className="label">
                 <span className="label-text">First Name *</span>
               </label>
@@ -114,12 +114,12 @@ export default function ClientForm({ client }: ClientFormProps) {
                 name="firstName"
                 value={formData.firstName}
                 onChange={handleChange}
-                className="input input-bordered"
+                className="input input-bordered w-full"
                 required
               />
             </div>
 
-            <div className="form-control">
+            <div className="form-control w-full">
               <label className="label">
                 <span className="label-text">Last Name *</span>
               </label>
@@ -128,12 +128,12 @@ export default function ClientForm({ client }: ClientFormProps) {
                 name="lastName"
                 value={formData.lastName}
                 onChange={handleChange}
-                className="input input-bordered"
+                className="input input-bordered w-full"
                 required
               />
             </div>
 
-            <div className="form-control">
+            <div className="form-control w-full">
               <label className="label">
                 <span className="label-text">Phone Number *</span>
               </label>
@@ -142,12 +142,12 @@ export default function ClientForm({ client }: ClientFormProps) {
                 name="phone"
                 value={formData.phone}
                 onChange={handleChange}
-                className="input input-bordered"
+                className="input input-bordered w-full"
                 required
               />
             </div>
 
-            <div className="form-control">
+            <div className="form-control w-full">
               <label className="label">
                 <span className="label-text">Email</span>
               </label>
@@ -156,11 +156,11 @@ export default function ClientForm({ client }: ClientFormProps) {
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                className="input input-bordered"
+                className="input input-bordered w-full"
               />
             </div>
 
-            <div className="form-control md:col-span-2">
+            <div className="form-control md:col-span-2 w-full">
               <label className="label">
                 <span className="label-text">Notes</span>
               </label>
@@ -168,23 +168,23 @@ export default function ClientForm({ client }: ClientFormProps) {
                 name="notes"
                 value={formData.notes}
                 onChange={handleChange}
-                className="textarea textarea-bordered h-24"
+                className="textarea textarea-bordered h-32 md:h-24 w-full"
                 placeholder="Any special notes about this client..."
               />
             </div>
           </div>
 
-          <div className="card-actions justify-end mt-6">
+          <div className="card-actions flex flex-col sm:flex-row justify-end gap-2 mt-6">
             <button
               type="button"
               onClick={() => router.back()}
-              className="btn btn-ghost"
+              className="btn btn-ghost w-full sm:w-auto"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="btn btn-primary"
+              className="btn btn-primary w-full sm:w-auto"
               disabled={isSubmitting}
             >
               {isSubmitting 
@@ -196,5 +196,6 @@ export default function ClientForm({ client }: ClientFormProps) {
         </div>
       </form>
     </div>
+
   );
 }

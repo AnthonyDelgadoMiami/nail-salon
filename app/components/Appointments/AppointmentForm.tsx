@@ -157,26 +157,28 @@ export default function AppointmentForm({ appointment, clients, services }: Appo
       )}
 
       <form onSubmit={handleSubmit} className="card bg-base-100 shadow-xl">
-        <div className="card-body">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="card-body space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Date */}
             <div className="form-control">
-              <label className="label">
-                <span className="label-text">Date *</span>
+              <label className="label font-semibold text-sm md:text-base">
+                <span>Date *</span>
               </label>
               <input
                 type="date"
                 name="date"
                 value={formData.date}
                 onChange={handleChange}
-                className="input input-bordered"
+                className="input input-bordered input-sm md:input-md"
                 required
                 disabled={isSubmitting}
               />
             </div>
 
+            {/* Time */}
             <div className="form-control">
-              <label className="label">
-                <span className="label-text">Time *</span>
+              <label className="label font-semibold text-sm md:text-base">
+                <span>Time *</span>
               </label>
               <TimeSelect
                 value={formData.time}
@@ -185,9 +187,10 @@ export default function AppointmentForm({ appointment, clients, services }: Appo
               />
             </div>
 
+            {/* Client */}
             <div className="form-control md:col-span-2">
-              <label className="label">
-                <span className="label-text">Client *</span>
+              <label className="label font-semibold text-sm md:text-base">
+                <span>Client *</span>
               </label>
               <ClientSearch
                 clients={clients}
@@ -197,43 +200,46 @@ export default function AppointmentForm({ appointment, clients, services }: Appo
               />
             </div>
 
+            {/* Service */}
             <div className="form-control">
-              <label className="label">
-                <span className="label-text">Service *</span>
+              <label className="label font-semibold text-sm md:text-base">
+                <span>Service *</span>
               </label>
               <select
                 name="serviceId"
                 value={formData.serviceId}
                 onChange={handleChange}
-                className="select select-bordered"
+                className="select select-bordered select-sm md:select-md"
                 required
                 disabled={isSubmitting}
               >
                 <option value="">Select a service</option>
                 {services.map(service => (
                   <option key={service.id} value={service.id}>
-                    {service.name} (${service.price}) - {service.duration}min
+                    {service.name} (${service.price}) – {service.duration}min
                   </option>
                 ))}
               </select>
             </div>
 
+            {/* Notes */}
             <div className="form-control md:col-span-2">
-              <label className="label">
-                <span className="label-text">Notes</span>
+              <label className="label font-semibold text-sm md:text-base">
+                <span>Notes</span>
               </label>
               <textarea
                 name="notes"
                 value={formData.notes}
                 onChange={handleChange}
-                className="textarea textarea-bordered h-24"
+                className="textarea textarea-bordered h-28 textarea-sm md:textarea-md"
                 placeholder="Any special notes for this appointment..."
                 disabled={isSubmitting}
               />
             </div>
           </div>
 
-          <div className="card-actions justify-end mt-6">
+          {/* Actions */}
+          <div className="flex flex-col sm:flex-row gap-3 sm:justify-end pt-4 border-t">
             <button
               type="button"
               onClick={() => router.back()}
@@ -249,12 +255,12 @@ export default function AppointmentForm({ appointment, clients, services }: Appo
             >
               {isSubmitting 
                 ? (appointment ? 'Updating...' : 'Scheduling...') 
-                : (appointment ? 'Update Appointment' : 'Schedule Appointment')
-              }
+                : (appointment ? 'Update Appointment' : 'Schedule Appointment')}
             </button>
           </div>
         </div>
       </form>
+
     </div>
   );
 }

@@ -74,18 +74,20 @@ export default function ClientListSearch({ clients }: ClientListSearchProps) {
                 <td>{client.email || '-'}</td>
                 <td className="max-w-xs truncate">{client.notes || '-'}</td>
                 <td>
-                  <Link 
-                    href={`/clients/${client.id}`} 
-                    className="btn btn-sm btn-info mr-2"
-                  >
-                    View
-                  </Link>
-                  <Link 
-                    href={`/clients/${client.id}/edit`}
-                    className="btn btn-sm btn-warning mr-2"
-                  >
-                    Edit
-                  </Link>
+                  <div className="flex flex-col lg:flex-row gap-2">
+                    <Link 
+                      href={`/clients/${client.id}`} 
+                      className="btn btn-sm btn-info"
+                    >
+                      View
+                    </Link>
+                    <Link 
+                      href={`/clients/${client.id}/edit`}
+                      className="btn btn-sm btn-warning"
+                    >
+                      Edit
+                    </Link>
+                  </div>
                 </td>
               </tr>
             ))}

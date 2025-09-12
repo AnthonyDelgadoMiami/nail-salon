@@ -40,159 +40,171 @@ export default function AppointmentDetailPage() {
       try {
         if (params.id) {
           const response = await fetch(`/api/appointments/${params.id}`);
-          
           if (response.ok) {
-            const appointmentData = await response.json();
-            setAppointment(appointmentData);
+            const data = await response.json();
+            setAppointment(data);
           } else {
             const errorData = await response.json();
-            setError(errorData.error || 'Failed to fetch appointment');
+            setError(errorData.error || "Failed to fetch appointment");
           }
         }
       } catch (err) {
-        setError('An error occurred while fetching the appointment');
-        console.error('Error fetching appointment:', err);
+        setError("An error occurred while fetching the appointment");
+        console.error(err);
       } finally {
         setLoading(false);
       }
     };
-
     loadAppointment();
   }, [params.id]);
 
   const handleDelete = async () => {
-    if (!confirm('Are you sure you want to delete this appointment?')) {
-      return;
-    }
+    if (!confirm("Are you sure you want to delete this appointment?")) return;
 
     try {
       const response = await fetch(`/api/appointments/${params.id}`, {
-        method: 'DELETE',
+        method: "DELETE",
       });
-
       if (response.ok) {
-        // Redirect to appointments list after successful deletion
-        router.push('/appointments');
+        router.push("/appointments");
       } else {
         const errorData = await response.json();
-        setError(errorData.error || 'Failed to delete appointment');
+        setError(errorData.error || "Failed to delete appointment");
       }
     } catch (err) {
-      setError('An error occurred while deleting the appointment');
-      console.error('Error deleting appointment:', err);
+      setError("An error occurred while deleting the appointment");
+      console.error(err);
     }
   };
 
   if (loading) {
     return (
-      <div className="container mx-auto p-4">
-        <div className="flex justify-center items-center h-64">
-          <span className="loading loading-spinner loading-lg"></span>
-        </div>
+      <div className="flex justify-center items-center h-64">
+        <span className="loading loading-lg loading-spinner text-primary"></span>
       </div>
     );
   }
 
   if (error || !appointment) {
     return (
-      <div className="container mx-auto p-4">
-        <div className="alert alert-error">
-          <span>{error || 'Appointment not found'}</span>
+      <div className="max-w-xl mx-auto p-6">
+        <div className="alert alert-error shadow-lg">
+          <span>{error || "Appointment not found"}</span>
         </div>
-        <Link href="/appointments" className="btn btn-primary mt-4">
+        <Link href="/appointments" className="btn btn-primary mt-6 w-full">
           Back to Appointments
         </Link>
       </div>
     );
   }
 
-  const formatDateTime = (dateString: string) => {
-    const date = new Date(dateString);
-    return {
-      date: date.toLocaleDateString(),
-      time: date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      full: date.toLocaleString()
-    };
-  };
-
-  const datetime = formatDateTime(appointment.date);
+  const date = new Date(appointment.date);
+  const dateString = date.toLocaleDateString();
+  const timeString = date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
   return (
-    <div className="container mx-auto p-4">
-      <div className="flex justify-between items-center mb-6">
+    <div className="container mx-auto p-4 space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <h1 className="text-3xl font-bold">Appointment Details</h1>
+        <Link href="/appointments" className="btn btn-ghost">
+          ← Back
+        </Link>
       </div>
-      
+
+      {/* Main Card */}
       <div className="card bg-base-100 shadow-xl">
-        <div className="card-body">
-          <h2 className="card-title">Appointment #{appointment.id}</h2>
-          
+        <div className="card-body space-y-6">
+          <h2 className="card-title text-lg">
+            Appointment #{appointment.id}
+          </h2>
+
+          {/* Info Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Appointment Info */}
             <div>
-              <h3 className="font-semibold text-lg mb-3">Appointment Information</h3>
-              <div className="space-y-2">
-                <p><strong>Date:</strong> {datetime.date}</p>
-                <p><strong>Time:</strong> {datetime.time}</p>
-                <p><strong>Duration:</strong> {appointment.duration} minutes</p>
-                <p><strong>Service:</strong> {appointment.service.name}</p>
-                <p><strong>Price:</strong> ${appointment.service.price.toFixed(2)}</p>
+              <h3 className="font-semibold text-lg mb-3">Appointment Info</h3>
+              <div className="space-y-2 text-sm">
+                <p>
+                  <strong>Date:</strong> {dateString}
+                </p>
+                <p>
+                  <strong>Time:</strong> {timeString}
+                </p>
+                <p>
+                  <strong>Duration:</strong> {appointment.duration} min
+                </p>
+                <p>
+                  <strong>Service:</strong>{" "}
+                  <span className="badge badge-primary badge-sm">
+                    {appointment.service.name}
+                  </span>
+                </p>
+                <p>
+                  <strong>Price:</strong> ${appointment.service.price.toFixed(2)}
+                </p>
                 {appointment.service.description && (
-                  <p><strong>Description:</strong> {appointment.service.description}</p>
+                  <p>
+                    <strong>Description:</strong> {appointment.service.description}
+                  </p>
                 )}
               </div>
             </div>
 
+            {/* Client Info */}
             <div>
-              <h3 className="font-semibold text-lg mb-3">Client Information</h3>
-              <div className="space-y-2">
-                <p><strong>Client:</strong> {appointment.client.firstName} {appointment.client.lastName}</p>
-                <p><strong>Phone:</strong> {appointment.client.phone}</p>
+              <h3 className="font-semibold text-lg mb-3">Client Info</h3>
+              <div className="space-y-2 text-sm">
+                <p>
+                  <strong>Name:</strong> {appointment.client.firstName}{" "}
+                  {appointment.client.lastName}
+                </p>
+                <p>
+                  <strong>Phone:</strong> {appointment.client.phone}
+                </p>
                 {appointment.client.email && (
-                  <p><strong>Email:</strong> {appointment.client.email}</p>
+                  <p>
+                    <strong>Email:</strong> {appointment.client.email}
+                  </p>
                 )}
-                <Link 
+                <Link
                   href={`/clients/${appointment.client.id}`}
-                  className="btn btn-sm btn-outline mt-2"
+                  className="btn btn-sm btn-outline mt-3"
                 >
-                  View Client Details
+                  View Client
                 </Link>
               </div>
             </div>
           </div>
 
+          {/* Notes */}
           {appointment.notes && (
-            <div className="mt-6">
+            <div>
               <h3 className="font-semibold text-lg mb-2">Notes</h3>
-              <div className="bg-base-200 p-4 rounded-lg">
-                <p>{appointment.notes}</p>
+              <div className="bg-base-200 p-4 rounded-lg text-sm">
+                {appointment.notes}
               </div>
             </div>
           )}
 
-          <div className="card-actions justify-between mt-8">
-            
-            <div className="flex gap-2">
-              <Link 
+          {/* Actions */}
+          <div className="pt-4 border-t">
+            <div className="flex flex-col sm:flex-row gap-2 sm:justify-start">
+              <Link
                 href={`/appointments/${appointment.id}/edit`}
                 className="btn btn-warning"
               >
-                Edit Appointment
+                Edit
               </Link>
-              <button 
+              <button
                 onClick={handleDelete}
-                className="btn btn-outline btn-error"
+                className="btn btn-error btn-outline"
               >
-                Delete Appointment
+                Delete
               </button>
             </div>
           </div>
         </div>
-      </div>
-
-      <div className="mt-6">
-        <Link href="/appointments" className="btn btn-ghost">
-          ← Back to Appointments
-        </Link>
       </div>
     </div>
   );

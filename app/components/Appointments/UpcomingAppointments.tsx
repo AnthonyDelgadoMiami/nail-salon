@@ -26,29 +26,37 @@ export default async function UpcomingAppointments({
 
     if (upcomingAppointments.length === 0) {
       return (
-        <div className="text-center py-4">
-          <p className="text-gray-500">No appointments scheduled for the next {days} days</p>
+        <div className="card bg-base-100 shadow-sm border border-base-300">
+          <div className="card-body text-center">
+            <p className="text-gray-500">
+              No appointments scheduled for the next {days} days
+            </p>
+          </div>
         </div>
       );
     }
 
-    // Limit the number of items if specified
     const displayedAppointments = maxItems 
       ? upcomingAppointments.slice(0, maxItems) 
       : upcomingAppointments;
 
     return (
-      <div className="space-y-3">
-        {displayedAppointments.map(appointment => (
-          <AppointmentCard key={appointment.id} appointment={appointment} />
-        ))}
+      <div>
+        <h2 className="text-lg font-bold mb-4">Upcoming Appointments</h2>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {displayedAppointments.map(appointment => (
+            <AppointmentCard key={appointment.id} appointment={appointment} />
+          ))}
+        </div>
       </div>
     );
   } catch (error) {
     console.error('Error fetching upcoming appointments:', error);
     return (
-      <div className="text-center py-4">
-        <p className="text-error">Failed to load appointments</p>
+      <div className="card bg-base-100 border border-error shadow-sm">
+        <div className="card-body text-center">
+          <p className="text-error font-medium">Failed to load appointments</p>
+        </div>
       </div>
     );
   }

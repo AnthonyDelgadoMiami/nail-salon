@@ -184,26 +184,26 @@ export default function CalendarView({ appointments }: CalendarViewProps) {
   };
 
   return (
-    <div className="bg-base-100 rounded-lg shadow-md p-6">
+    <div className="bg-base-100 rounded-xl shadow-lg p-6">
       {/* Calendar Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
         <button 
           onClick={navigateToToday}
-          className="btn btn-outline btn-sm"
+          className="btn btn-outline btn-sm rounded-full"
         >
           Today
         </button>
-        
-        <div className="flex items-center gap-4">
+
+        <div className="flex items-center gap-3">
           <button 
             onClick={() => navigateWeek('prev')}
             className="btn btn-ghost btn-circle btn-sm"
           >
             <ChevronLeftIcon className="h-5 w-5" />
           </button>
-          
-          <h2 className="text-xl font-semibold">{formatDateRange()}</h2>
-          
+          <h2 className="text-lg sm:text-xl font-semibold text-center">
+            {formatDateRange()}
+          </h2>
           <button 
             onClick={() => navigateWeek('next')}
             className="btn btn-ghost btn-circle btn-sm"
@@ -211,18 +211,18 @@ export default function CalendarView({ appointments }: CalendarViewProps) {
             <ChevronRightIcon className="h-5 w-5" />
           </button>
         </div>
-        
-        <Link href="/appointments/new" className="btn btn-primary btn-sm">
-          New Appointment
+
+        <Link href="/appointments/new" className="btn btn-primary btn-sm rounded-full">
+          + New Appointment
         </Link>
       </div>
 
       {/* Calendar Grid */}
       <div className="overflow-x-auto">
-        <div className="grid grid-cols-8 min-w-[1000px]">
+        <div className="grid grid-cols-8 min-w-[1000px] border border-gray-200 rounded-lg">
           {/* Time column */}
-          <div className="border-r border-gray-200">
-            <div className="h-12 border-b border-gray-200 flex items-center justify-center font-semibold">
+          <div className="bg-base-200 border-r border-gray-200 sticky left-0 z-20">
+            <div className="h-12 flex items-center justify-center font-semibold border-b">
               Time
             </div>
             {timeSlots.map((slot, index) => (
@@ -237,14 +237,25 @@ export default function CalendarView({ appointments }: CalendarViewProps) {
 
           {/* Day columns */}
           {weekDays.map((day, dayIndex) => (
-            <div key={dayIndex} className={`relative border-r border-gray-200 last:border-r-0 ${
-              day.isPast ? 'bg-gray-50' : ''
-            }`}>
+            <div
+              key={dayIndex}
+              className={`relative border-r border-gray-200 last:border-r-0 ${
+                day.isPast ? 'bg-gray-50' : 'bg-white'
+              }`}
+            >
               {/* Day header */}
-              <div className={`h-12 border-b border-gray-200 flex flex-col items-center justify-center font-semibold ${
-                day.isToday ? 'bg-blue-50 text-blue-600' : ''
-              } ${day.isPast ? 'text-gray-400' : ''}`}>
-                <div className="text-sm">{day.date.toLocaleDateString('en-US', { weekday: 'short' })}</div>
+              <div
+                className={`h-12 border-b flex flex-col items-center justify-center font-semibold ${
+                  day.isToday
+                    ? 'bg-primary/10 text-primary'
+                    : day.isPast
+                    ? 'text-gray-400'
+                    : ''
+                }`}
+              >
+                <div className="text-sm">
+                  {day.date.toLocaleDateString('en-US', { weekday: 'short' })}
+                </div>
                 <div className="text-xs">{day.date.getDate()}</div>
               </div>
 
@@ -255,12 +266,9 @@ export default function CalendarView({ appointments }: CalendarViewProps) {
                     key={slot.time}
                     className="h-12 border-b border-gray-200 relative"
                   >
-                    {/* Hour line */}
                     {slot.minute === 0 && (
                       <div className="absolute top-0 left-0 right-0 border-t border-gray-300"></div>
                     )}
-                    
-                    {/* Half-hour line */}
                     {slot.minute === 30 && (
                       <div className="absolute top-0 left-2 right-2 border-t border-gray-100"></div>
                     )}
@@ -271,38 +279,46 @@ export default function CalendarView({ appointments }: CalendarViewProps) {
                 {day.appointments.map((appointment) => {
                   const { top, height } = calculateAppointmentPosition(appointment);
                   const appointmentDate = new Date(appointment.date);
-                  const endTime = new Date(appointmentDate.getTime() + appointment.service.duration * 60000);
+                  const endTime = new Date(
+                    appointmentDate.getTime() + appointment.service.duration * 60000
+                  );
                   const isPast = isAppointmentPast(appointment.date);
-                  
+
                   return (
                     <div
                       key={appointment.id}
                       onClick={() => handleAppointmentClick(appointment.id)}
-                      className={`absolute left-1 right-1 rounded p-1 cursor-pointer border-l-4 overflow-hidden hover:opacity-80 transition-opacity ${
-                        isPast 
-                          ? 'bg-gray-100 border-gray-400 text-gray-600' 
-                          : 'bg-blue-50 border-blue-500'
+                      className={`absolute left-1 right-1 p-2 rounded-lg cursor-pointer shadow-sm border-l-4 overflow-hidden transition-all hover:shadow-md ${
+                        isPast
+                          ? 'bg-gray-100 border-gray-400 text-gray-600'
+                          : 'bg-blue-100 border-primary'
                       }`}
                       style={{
                         top: `${top * 3}rem`,
                         height: `${height * 3}rem`,
-                        zIndex: 10
+                        zIndex: 10,
                       }}
                     >
-                      <div className="text-xs font-medium whitespace-nowrap overflow-hidden">
-                        {appointmentDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </div>
-                      <div className="text-xs font-semibold whitespace-nowrap overflow-hidden">
+                      <div className="text-xs font-semibold truncate">
                         {appointment.client.firstName} {appointment.client.lastName}
                       </div>
-                      <div className="text-xs whitespace-nowrap overflow-hidden">
-                        {appointment.service.name}
-                      </div>
-                      <div className="text-xs whitespace-nowrap overflow-hidden">
-                        {endTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      <div className="text-xs truncate">{appointment.service.name}</div>
+                      <div className="text-[10px] text-gray-500">
+                        {appointmentDate.toLocaleTimeString([], {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}{' '}
+                        -{' '}
+                        {endTime.toLocaleTimeString([], {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        })}
                       </div>
                       {isPast && (
-                        <div className="absolute top-1 right-1 text-xs text-gray-500" title="Completed appointment">
+                        <div
+                          className="absolute top-1 right-1 text-xs text-gray-400"
+                          title="Completed"
+                        >
                           ✓
                         </div>
                       )}
@@ -316,19 +332,19 @@ export default function CalendarView({ appointments }: CalendarViewProps) {
       </div>
 
       {/* Legend */}
-      <div className="mt-6 flex flex-wrap gap-4 text-xs">
-        <div className="flex items-center gap-1">
-          <div className="w-3 h-3 bg-blue-50 border-l-4 border-blue-500"></div>
+      <div className="mt-6 flex flex-wrap gap-6 text-sm">
+        <div className="flex items-center gap-2">
+          <span className="badge badge-primary badge-sm"></span>
           <span>Upcoming Appointments</span>
         </div>
-        <div className="flex items-center gap-1">
-          <div className="w-3 h-3 bg-gray-100 border-l-4 border-gray-400"></div>
+        <div className="flex items-center gap-2">
+          <span className="badge badge-neutral badge-sm"></span>
           <span>Completed Appointments</span>
         </div>
       </div>
 
       {/* Info */}
-      <div className="mt-4 text-sm text-gray-600">
+      <div className="mt-4 text-xs text-gray-500">
         <p>• Click on any appointment to view details</p>
       </div>
     </div>
