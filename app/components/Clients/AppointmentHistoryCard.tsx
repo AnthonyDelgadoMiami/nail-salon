@@ -7,7 +7,6 @@ interface Appointment {
   clientId: number;
   serviceId: number;
   duration: number;
-  status: string;
   notes: string | null;
   createdAt: Date;
   updatedAt: Date;
@@ -42,38 +41,16 @@ export default function AppointmentHistoryCard({ appointment }: AppointmentHisto
 
   const datetime = formatDateTime(appointment.date);
 
-  const getStatusBadge = (status: string) => {
-    switch(status) {
-      case "CONFIRMED":
-        return <span className="badge badge-info">Confirmed</span>;
-      case "SCHEDULED":
-        return <span className="badge badge-primary">Scheduled</span>;
-      case "COMPLETED":
-        return <span className="badge badge-success">Completed</span>;
-      case "CANCELLED":
-        return <span className="badge badge-error">Cancelled</span>;
-      case "NO_SHOW":
-        return <span className="badge badge-warning">No Show</span>;
-      default:
-        return <span className="badge badge-neutral">{status}</span>;
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch(status) {
-      case "CONFIRMED": return "border-l-4 border-l-info";
-      case "SCHEDULED": return "border-l-4 border-l-primary";
-      case "COMPLETED": return "border-l-4 border-l-success";
-      case "CANCELLED": return "border-l-4 border-l-error";
-      case "NO_SHOW": return "border-l-4 border-l-warning";
-      default: return "border-l-4 border-l-neutral";
-    }
-  };
+  // Status logic: check if appointment has ended
+  const startTime = new Date(appointment.date);
+  const durationMinutes = appointment.duration ?? appointment.service?.duration ?? 0;
+  const endTime = new Date(startTime.getTime() + durationMinutes * 60000);
+  const isUpcoming = endTime > new Date();
 
   const isPastAppointment = new Date(appointment.date) < new Date();
 
   return (
-    <div className={`card bg-base-100 shadow-md hover:shadow-lg transition-shadow ${getStatusColor(appointment.status)}`}>
+    <div className={`card bg-base-100 shadow-md hover:shadow-lg transition-shadow`}>
       <div className="card-body p-4">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           {/* Left side - Appointment details */}
@@ -82,7 +59,15 @@ export default function AppointmentHistoryCard({ appointment }: AppointmentHisto
               <h3 className="card-title text-lg">
                 {appointment.service.name}
               </h3>
-              {getStatusBadge(appointment.status)}
+              <span
+                className={`ml-2 px-2 py-1 rounded text-xs font-semibold align-middle ${
+                  isUpcoming
+                    ? "bg-green-100 text-green-800"
+                    : "bg-gray-200 text-gray-600"
+                }`}
+              >
+                {isUpcoming ? "Upcoming" : "Completed"}
+              </span>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">

@@ -11,7 +11,6 @@ interface Appointment {
   clientId: number;
   serviceId: number;
   duration: number;
-  status: string;
   notes: string | null;
   client: {
     id: number;
@@ -60,34 +59,6 @@ export default function AppointmentDetailPage() {
 
     loadAppointment();
   }, [params.id]);
-
-  const handleStatusUpdate = async (newStatus: string) => {
-    try {
-      const response = await fetch(`/api/appointments/${params.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          status: newStatus
-        }),
-      });
-
-      if (response.ok) {
-        // Refresh the page to show updated status
-        router.refresh();
-        // Reload appointment data
-        const updatedAppointment = await response.json();
-        setAppointment(updatedAppointment);
-      } else {
-        const errorData = await response.json();
-        setError(errorData.error || 'Failed to update appointment');
-      }
-    } catch (err) {
-      setError('An error occurred while updating the appointment');
-      console.error('Error updating appointment:', err);
-    }
-  };
 
   const handleDelete = async () => {
     if (!confirm('Are you sure you want to delete this appointment?')) {
@@ -146,23 +117,6 @@ export default function AppointmentDetailPage() {
 
   const datetime = formatDateTime(appointment.date);
 
-  const getStatusBadge = (status: string) => {
-    switch(status) {
-      case "CONFIRMED":
-        return <span className="badge badge-success">Confirmed</span>;
-      case "SCHEDULED":
-        return <span className="badge badge-info">Scheduled</span>;
-      case "COMPLETED":
-        return <span className="badge badge-primary">Completed</span>;
-      case "CANCELLED":
-        return <span className="badge badge-error">Cancelled</span>;
-      case "NO_SHOW":
-        return <span className="badge badge-warning">No Show</span>;
-      default:
-        return <span className="badge badge-neutral">{status}</span>;
-    }
-  };
-
   return (
     <div className="container mx-auto p-4">
       <div className="flex justify-between items-center mb-6">
@@ -180,7 +134,6 @@ export default function AppointmentDetailPage() {
                 <p><strong>Date:</strong> {datetime.date}</p>
                 <p><strong>Time:</strong> {datetime.time}</p>
                 <p><strong>Duration:</strong> {appointment.duration} minutes</p>
-                <p><strong>Status:</strong> {getStatusBadge(appointment.status)}</p>
                 <p><strong>Service:</strong> {appointment.service.name}</p>
                 <p><strong>Price:</strong> ${appointment.service.price.toFixed(2)}</p>
                 {appointment.service.description && (

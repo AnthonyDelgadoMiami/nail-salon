@@ -20,7 +20,6 @@ export interface Appointment {
   clientId: number;
   serviceId: number;
   duration: number;
-  status: string;
   notes: string | null;
   createdAt: Date;
   updatedAt: Date;

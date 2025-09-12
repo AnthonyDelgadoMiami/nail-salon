@@ -11,7 +11,6 @@ interface Appointment {
   service: {
     name: string;
   };
-  status: string;
 }
 
 interface AppointmentCardProps {
@@ -51,23 +50,6 @@ export default function AppointmentCard({ appointment }: AppointmentCardProps) {
     return formatDate(date);
   };
 
-  const getStatusBadge = (status: string) => {
-    switch(status) {
-      case "CONFIRMED":
-        return <span className="badge badge-success badge-sm">Confirmed</span>;
-      case "SCHEDULED":
-        return <span className="badge badge-info badge-sm">Scheduled</span>;
-      case "COMPLETED":
-        return <span className="badge badge-primary badge-sm">Completed</span>;
-      case "CANCELLED":
-        return <span className="badge badge-error badge-sm">Cancelled</span>;
-      case "NO_SHOW":
-        return <span className="badge badge-warning badge-sm">No Show</span>;
-      default:
-        return <span className="badge badge-neutral badge-sm">{status}</span>;
-    }
-  };
-
   return (
     <div className="card card-compact bg-base-100 shadow-md border border-base-300 hover:shadow-lg transition-shadow">
       <div className="card-body p-4">
@@ -80,7 +62,6 @@ export default function AppointmentCard({ appointment }: AppointmentCardProps) {
               {getDateDisplay(appointment.date)}
             </span>
           </div>
-          {getStatusBadge(appointment.status)}
         </div>
         
         <div className="flex justify-between items-center">

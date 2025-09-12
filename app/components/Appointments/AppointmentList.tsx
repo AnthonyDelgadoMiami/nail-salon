@@ -6,7 +6,6 @@ interface Appointment {
   date: string;
   clientId: number;
   serviceId: number;
-  status: string;
   notes: string | null;
   client: {
     id: number;
@@ -26,22 +25,7 @@ interface AppointmentListProps {
 }
 
 export default function AppointmentList({ appointments }: AppointmentListProps) {
-  const getStatusBadge = (status: string) => {
-    switch(status) {
-      case "CONFIRMED":
-        return <span className="badge badge-success">{status}</span>;
-      case "SCHEDULED":
-        return <span className="badge badge-info">{status}</span>;
-      case "COMPLETED":
-        return <span className="badge badge-primary">{status}</span>;
-      case "CANCELLED":
-        return <span className="badge badge-error">{status}</span>;
-      case "NO_SHOW":
-        return <span className="badge badge-warning">{status}</span>;
-      default:
-        return <span className="badge badge-neutral">{status}</span>;
-    }
-  };
+
 
   const formatTime = (dateString: string) => {
     const date = new Date(dateString);
@@ -71,7 +55,6 @@ export default function AppointmentList({ appointments }: AppointmentListProps) 
             <th>Client</th>
             <th>Service</th>
             <th>Duration</th>
-            <th>Status</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -87,7 +70,6 @@ export default function AppointmentList({ appointments }: AppointmentListProps) 
               </td>
               <td>{appointment.service.name}</td>
               <td>{appointment.service.duration} min</td>
-              <td>{getStatusBadge(appointment.status)}</td>
               <td>
                 <Link 
                   href={`/appointments/${appointment.id}`} 

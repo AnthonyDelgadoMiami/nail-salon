@@ -2,8 +2,8 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 
 interface Appointment {
@@ -11,7 +11,7 @@ interface Appointment {
   date: Date;
   clientId: number;
   serviceId: number;
-  status: string;
+  duration: number;
   notes: string | null;
   client: {
     id: number;
@@ -33,6 +33,7 @@ interface CalendarViewProps {
 interface Day {
   date: Date;
   isToday: boolean;
+  isPast: boolean;
   appointments: Appointment[];
 }
 
@@ -65,11 +66,13 @@ export default function CalendarView({ appointments }: CalendarViewProps) {
     return slots;
   }, []);
 
-  // Generate week days (Monday to Sunday)
+  // Generate week days (Monday to Sunday) with all appointments
   useEffect(() => {
     const generateWeek = () => {
       const days: Day[] = [];
       const current = new Date(currentDate);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0); // Start of today for comparison
       
       // Find Monday of the current week
       const dayOfWeek = current.getDay();
@@ -85,9 +88,13 @@ export default function CalendarView({ appointments }: CalendarViewProps) {
           return apptDate.toDateString() === day.toDateString();
         });
         
+        const dayStart = new Date(day);
+        dayStart.setHours(0, 0, 0, 0);
+        
         days.push({
           date: new Date(day),
           isToday: day.toDateString() === new Date().toDateString(),
+          isPast: dayStart < today,
           appointments: dayAppointments
         });
       }
@@ -116,6 +123,29 @@ export default function CalendarView({ appointments }: CalendarViewProps) {
     router.push(`/appointments/${appointmentId}`);
   };
 
+  const handleDeleteAppointment = async (appointmentId: number, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent triggering the appointment click
+    if (!confirm('Are you sure you want to cancel this appointment?')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/appointments/${appointmentId}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        // Refresh the page to show updated calendar
+        router.refresh();
+      } else {
+        alert('Failed to cancel appointment');
+      }
+    } catch (error) {
+      console.error('Error deleting appointment:', error);
+      alert('An error occurred while canceling the appointment');
+    }
+  };
+
   const formatDateRange = () => {
     if (weekDays.length === 0) return '';
     
@@ -134,17 +164,6 @@ export default function CalendarView({ appointments }: CalendarViewProps) {
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch(status) {
-      case "CONFIRMED": return "bg-green-100 border-green-500 text-green-800";
-      case "SCHEDULED": return "bg-blue-100 border-blue-500 text-blue-800";
-      case "COMPLETED": return "bg-purple-100 border-purple-500 text-purple-800";
-      case "CANCELLED": return "bg-red-100 border-red-500 text-red-800";
-      case "NO_SHOW": return "bg-yellow-100 border-yellow-500 text-yellow-800";
-      default: return "bg-gray-100 border-gray-500 text-gray-800";
-    }
-  };
-
   const calculateAppointmentPosition = (appointment: Appointment) => {
     const appointmentDate = new Date(appointment.date);
     const startHours = appointmentDate.getHours();
@@ -158,6 +177,10 @@ export default function CalendarView({ appointments }: CalendarViewProps) {
     const height = duration / 30; // Each 30 minutes = 1 row
     
     return { top, height };
+  };
+
+  const isAppointmentPast = (appointmentDate: Date) => {
+    return new Date(appointmentDate) < new Date();
   };
 
   return (
@@ -214,11 +237,13 @@ export default function CalendarView({ appointments }: CalendarViewProps) {
 
           {/* Day columns */}
           {weekDays.map((day, dayIndex) => (
-            <div key={dayIndex} className="relative border-r border-gray-200 last:border-r-0">
+            <div key={dayIndex} className={`relative border-r border-gray-200 last:border-r-0 ${
+              day.isPast ? 'bg-gray-50' : ''
+            }`}>
               {/* Day header */}
               <div className={`h-12 border-b border-gray-200 flex flex-col items-center justify-center font-semibold ${
                 day.isToday ? 'bg-blue-50 text-blue-600' : ''
-              }`}>
+              } ${day.isPast ? 'text-gray-400' : ''}`}>
                 <div className="text-sm">{day.date.toLocaleDateString('en-US', { weekday: 'short' })}</div>
                 <div className="text-xs">{day.date.getDate()}</div>
               </div>
@@ -247,14 +272,19 @@ export default function CalendarView({ appointments }: CalendarViewProps) {
                   const { top, height } = calculateAppointmentPosition(appointment);
                   const appointmentDate = new Date(appointment.date);
                   const endTime = new Date(appointmentDate.getTime() + appointment.service.duration * 60000);
+                  const isPast = isAppointmentPast(appointment.date);
                   
                   return (
                     <div
                       key={appointment.id}
                       onClick={() => handleAppointmentClick(appointment.id)}
-                      className={`absolute left-1 right-1 rounded p-1 cursor-pointer border-l-4 overflow-hidden ${getStatusColor(appointment.status)} hover:opacity-80 transition-opacity`}
+                      className={`absolute left-1 right-1 rounded p-1 cursor-pointer border-l-4 overflow-hidden hover:opacity-80 transition-opacity ${
+                        isPast 
+                          ? 'bg-gray-100 border-gray-400 text-gray-600' 
+                          : 'bg-blue-50 border-blue-500'
+                      }`}
                       style={{
-                        top: `${top * 3}rem`, // 3rem per time slot (h-12)
+                        top: `${top * 3}rem`,
                         height: `${height * 3}rem`,
                         zIndex: 10
                       }}
@@ -271,6 +301,11 @@ export default function CalendarView({ appointments }: CalendarViewProps) {
                       <div className="text-xs whitespace-nowrap overflow-hidden">
                         {endTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </div>
+                      {isPast && (
+                        <div className="absolute top-1 right-1 text-xs text-gray-500" title="Completed appointment">
+                          ✓
+                        </div>
+                      )}
                     </div>
                   );
                 })}
@@ -283,25 +318,18 @@ export default function CalendarView({ appointments }: CalendarViewProps) {
       {/* Legend */}
       <div className="mt-6 flex flex-wrap gap-4 text-xs">
         <div className="flex items-center gap-1">
-          <div className="w-3 h-3 bg-green-100 border-l-4 border-green-500"></div>
-          <span>Confirmed</span>
+          <div className="w-3 h-3 bg-blue-50 border-l-4 border-blue-500"></div>
+          <span>Upcoming Appointments</span>
         </div>
         <div className="flex items-center gap-1">
-          <div className="w-3 h-3 bg-blue-100 border-l-4 border-blue-500"></div>
-          <span>Scheduled</span>
+          <div className="w-3 h-3 bg-gray-100 border-l-4 border-gray-400"></div>
+          <span>Completed Appointments</span>
         </div>
-        <div className="flex items-center gap-1">
-          <div className="w-3 h-3 bg-purple-100 border-l-4 border-purple-500"></div>
-          <span>Completed</span>
-        </div>
-        <div className="flex items-center gap-1">
-          <div className="w-3 h-3 bg-red-100 border-l-4 border-red-500"></div>
-          <span>Cancelled</span>
-        </div>
-        <div className="flex items-center gap-1">
-          <div className="w-3 h-3 bg-yellow-100 border-l-4 border-yellow-500"></div>
-          <span>No Show</span>
-        </div>
+      </div>
+
+      {/* Info */}
+      <div className="mt-4 text-sm text-gray-600">
+        <p>• Click on any appointment to view details</p>
       </div>
     </div>
   );

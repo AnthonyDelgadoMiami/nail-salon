@@ -61,7 +61,7 @@ export async function PUT(
   try {
     const { id } = await params;
     const body = await request.json();
-    const { date, clientId, serviceId, status, notes } = body;
+    const { date, clientId, serviceId, notes } = body;
 
     console.log('Updating appointment:', id, 'with data:', body);
 
@@ -164,7 +164,6 @@ export async function PUT(
         clientId,
         serviceId,
         duration: service.duration,
-        status: status || existingAppointment.status,
         notes: notes || null
       },
       include: {

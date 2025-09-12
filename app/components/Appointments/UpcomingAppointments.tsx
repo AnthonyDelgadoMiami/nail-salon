@@ -16,7 +16,15 @@ export default async function UpcomingAppointments({
     const { start, end } = getDateRange(days);
     const appointments = await getAppointmentsInDateRange(start, end);
 
-    if (appointments.length === 0) {
+    const now = new Date();
+    const upcomingAppointments = appointments.filter(appointment => {
+      const startTime = new Date(appointment.date); 
+      const durationMinutes = appointment.duration ?? appointment.service?.duration ?? 0;
+      const endTime = new Date(startTime.getTime() + durationMinutes * 60000);
+      return endTime > now;
+    });
+
+    if (upcomingAppointments.length === 0) {
       return (
         <div className="text-center py-4">
           <p className="text-gray-500">No appointments scheduled for the next {days} days</p>
@@ -26,8 +34,8 @@ export default async function UpcomingAppointments({
 
     // Limit the number of items if specified
     const displayedAppointments = maxItems 
-      ? appointments.slice(0, maxItems) 
-      : appointments;
+      ? upcomingAppointments.slice(0, maxItems) 
+      : upcomingAppointments;
 
     return (
       <div className="space-y-3">

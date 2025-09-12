@@ -27,7 +27,6 @@ interface Appointment {
   clientId: number;
   serviceId: number;
   duration: number;
-  status: string;
   notes: string | null;
   client: Client;
   service: Service;
@@ -49,7 +48,6 @@ export default function AppointmentForm({ appointment, clients, services }: Appo
     time: '',
     clientId: defaultClientId || '',
     serviceId: '',
-    status: 'SCHEDULED',
     notes: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -65,7 +63,6 @@ export default function AppointmentForm({ appointment, clients, services }: Appo
         time: date.toTimeString().slice(0, 5), // Gets "HH:MM" format
         clientId: appointment.clientId.toString(),
         serviceId: appointment.serviceId.toString(),
-        status: appointment.status,
         notes: appointment.notes || ''
       });
     }
@@ -115,7 +112,6 @@ export default function AppointmentForm({ appointment, clients, services }: Appo
           date: dateTime.toISOString(),
           clientId: parseInt(formData.clientId),
           serviceId: parseInt(formData.serviceId),
-          status: formData.status,
           notes: formData.notes
         }),
       });
@@ -219,25 +215,6 @@ export default function AppointmentForm({ appointment, clients, services }: Appo
                     {service.name} (${service.price}) - {service.duration}min
                   </option>
                 ))}
-              </select>
-            </div>
-
-            <div className="form-control">
-              <label className="label">
-                <span className="label-text">Status</span>
-              </label>
-              <select
-                name="status"
-                value={formData.status}
-                onChange={handleChange}
-                className="select select-bordered"
-                disabled={isSubmitting}
-              >
-                <option value="SCHEDULED">Scheduled</option>
-                <option value="CONFIRMED">Confirmed</option>
-                <option value="COMPLETED">Completed</option>
-                <option value="CANCELLED">Cancelled</option>
-                <option value="NO_SHOW">No Show</option>
               </select>
             </div>
 

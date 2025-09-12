@@ -47,8 +47,7 @@ model Appointment {
   date      DateTime
   clientId  Int
   serviceId Int
-  duration  Int      // Add this field
-  status    String   @default("SCHEDULED")
+  duration  Int
   notes     String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

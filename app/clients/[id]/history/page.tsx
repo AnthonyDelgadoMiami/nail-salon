@@ -16,6 +16,13 @@ export default async function ClientHistoryPage({ params }: PageProps) {
     notFound();
   }
 
+  function isUpcoming(appointment: any) {
+    const startTime = new Date(appointment.date);
+    const durationMinutes = appointment.duration ?? appointment.service?.duration ?? 0;
+    const endTime = new Date(startTime.getTime() + durationMinutes * 60000);
+    return endTime > new Date();
+  }
+
   const appointments = await getClientAppointments(Number(id));
 
   return (
@@ -36,26 +43,6 @@ export default async function ClientHistoryPage({ params }: PageProps) {
           <div className="stat-value text-3xl">{appointments.length}</div>
         </div>
         
-        <div className="stat bg-base-200 rounded-lg">
-          <div className="stat-title">Completed</div>
-          <div className="stat-value text-3xl text-success">
-            {appointments.filter(a => a.status === "COMPLETED").length}
-          </div>
-        </div>
-        
-        <div className="stat bg-base-200 rounded-lg">
-          <div className="stat-title">Upcoming</div>
-          <div className="stat-value text-3xl text-info">
-            {appointments.filter(a => a.status === "SCHEDULED" || a.status === "CONFIRMED").length}
-          </div>
-        </div>
-        
-        <div className="stat bg-base-200 rounded-lg">
-          <div className="stat-title">Cancelled</div>
-          <div className="stat-value text-3xl text-error">
-            {appointments.filter(a => a.status === "CANCELLED" || a.status === "NO_SHOW").length}
-          </div>
-        </div>
       </div>
 
       {/* Appointment List */}

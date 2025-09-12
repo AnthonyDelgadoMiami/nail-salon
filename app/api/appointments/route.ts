@@ -87,7 +87,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { date, clientId, serviceId, status, notes } = body;
+    const { date, clientId, serviceId, notes } = body;
 
     console.log('Creating appointment with data:', body);
 
@@ -168,7 +168,6 @@ export async function POST(request: NextRequest) {
         clientId,
         serviceId,
         duration: service.duration,
-        status: status || 'SCHEDULED',
         notes: notes || null
       },
       include: {

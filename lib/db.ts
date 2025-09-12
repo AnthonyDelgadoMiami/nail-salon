@@ -57,7 +57,6 @@ export const createAppointment = async (data: {
   clientId: number;
   serviceId: number;
   duration: number; 
-  status?: string;
   notes?: string;
 }) => {
   try {
@@ -67,7 +66,6 @@ export const createAppointment = async (data: {
         clientId: data.clientId,
         serviceId: data.serviceId,
         duration: data.duration,
-        status: data.status || 'SCHEDULED',
         notes: data.notes || null
       },
       include: {
@@ -85,7 +83,6 @@ export const updateAppointment = async (id: number, data: {
   date?: Date
   clientId?: number
   serviceId?: number
-  status?: string
   notes?: string
 }) => {
   return await prisma.appointment.update({
