@@ -168,7 +168,7 @@ export default function CalendarView({ appointments }: CalendarViewProps) {
     const appointmentDate = new Date(appointment.date);
     const startHours = appointmentDate.getHours();
     const startMinutes = appointmentDate.getMinutes();
-    const duration = appointment.service.duration; // in minutes
+    const duration = appointment.duration; // in minutes
     
     // Calculate top position (6 AM = 0, 8 PM = 14 hours * 2 = 28 rows)
     const top = ((startHours - 6) * 2) + (startMinutes / 30);
@@ -280,7 +280,7 @@ export default function CalendarView({ appointments }: CalendarViewProps) {
                   const { top, height } = calculateAppointmentPosition(appointment);
                   const appointmentDate = new Date(appointment.date);
                   const endTime = new Date(
-                    appointmentDate.getTime() + appointment.service.duration * 60000
+                    appointmentDate.getTime() + appointment.duration * 60000
                   );
                   const isPast = isAppointmentPast(appointment.date);
 
@@ -302,7 +302,7 @@ export default function CalendarView({ appointments }: CalendarViewProps) {
                       <div className="text-xs font-semibold truncate">
                         {appointment.client.firstName} {appointment.client.lastName}
                       </div>
-                      <div className="text-xs truncate">{appointment.service.name}</div>
+                      <div className="text-xs truncate">{appointment.service ? appointment.service.name : 'Custom'}</div>
                       <div className="text-[10px] text-gray-500">
                         {appointmentDate.toLocaleTimeString([], {
                           hour: '2-digit',

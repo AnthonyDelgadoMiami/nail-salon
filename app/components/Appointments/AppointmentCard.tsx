@@ -63,7 +63,7 @@ export default function AppointmentCard({ appointment }: AppointmentCardProps) {
           <h3 className="font-semibold text-sm">
             {appointment.client.firstName} {appointment.client.lastName}
           </h3>
-          <p className="text-xs text-gray-600">{appointment.service.name}</p>
+          <p className="text-xs text-gray-600">{appointment.service ? appointment.service.name : 'Custom'}</p>
         </div>
 
         <div className="card-actions justify-end">

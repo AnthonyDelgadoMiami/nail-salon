@@ -56,94 +56,96 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: RouteParams
+  { params }: { params: { id: string } }
 ) {
   try {
-    const { id } = await params;
     const body = await request.json();
-    const { date, clientId, serviceId, notes } = body;
-
-    console.log('Updating appointment:', id, 'with data:', body);
+    const { date, clientId, serviceId, notes, walkInClient, customService } = body;
+    const appointmentId = parseInt(params.id);
 
     // Validate required fields
-    if (!date || !clientId || !serviceId) {
+    if (!date) {
       return NextResponse.json(
-        { error: 'Date, client, and service are required' },
+        { error: 'Date is required' },
         { status: 400 }
       );
     }
 
-    // Validate date format
-    const appointmentDate = new Date(date);
-    if (isNaN(appointmentDate.getTime())) {
+    let finalClientId = clientId;
+    let finalServiceId = serviceId;
+    let finalDuration = 0;
+    let finalPrice = 0;
+
+    // Handle walk-in client updates (if needed)
+    if (walkInClient) {
+      // ... (similar logic to POST)
+    }
+
+    // Handle custom service
+    if (customService) {
+      // Validate custom service data
+      if (customService.duration <= 0 || customService.price < 0) {
+        return NextResponse.json(
+          { error: 'Custom service requires positive duration and non-negative price' },
+          { status: 400 }
+        );
+      }
+      
+      finalDuration = customService.duration;
+      finalPrice = customService.price;
+      finalServiceId = null;
+    } else {
+      // Get service details for regular services
+      if (!serviceId) {
+        return NextResponse.json(
+          { error: 'Service is required' },
+          { status: 400 }
+        );
+      }
+
+      const service = await prisma.service.findUnique({
+        where: { id: parseInt(serviceId) }
+      });
+
+      if (!service) {
+        return NextResponse.json(
+          { error: 'Service not found' },
+          { status: 404 }
+        );
+      }
+      
+      finalServiceId = parseInt(serviceId);
+      finalDuration = service.duration;
+      finalPrice = service.price;
+    }
+
+    // Validate client exists
+    if (!finalClientId) {
       return NextResponse.json(
-        { error: 'Invalid date format' },
+        { error: 'Client is required' },
         { status: 400 }
-      );
-    }
-
-    // Check if appointment exists
-    const existingAppointment = await prisma.appointment.findUnique({
-      where: { id: Number(id) }
-    });
-
-    if (!existingAppointment) {
-      return NextResponse.json(
-        { error: 'Appointment not found' },
-        { status: 404 }
-      );
-    }
-
-    // Get service to get duration
-    const service = await prisma.service.findUnique({
-      where: { id: serviceId }
-    });
-
-    if (!service) {
-      return NextResponse.json(
-        { error: 'Service not found' },
-        { status: 404 }
-      );
-    }
-
-    // Check if client exists
-    const client = await prisma.client.findUnique({
-      where: { id: clientId }
-    });
-
-    if (!client) {
-      return NextResponse.json(
-        { error: 'Client not found' },
-        { status: 404 }
       );
     }
 
     // Check for time conflicts (excluding the current appointment)
-    const appointmentEnd = new Date(appointmentDate.getTime() + service.duration * 60000);
+    const appointmentDate = new Date(date);
+    const appointmentEnd = new Date(appointmentDate.getTime() + finalDuration * 60000);
 
     const conflictingAppointment = await prisma.appointment.findFirst({
       where: {
-        AND: [
+        id: { not: appointmentId },
+        OR: [
           {
-            NOT: {
-              id: Number(id) // Exclude the current appointment
+            date: {
+              lte: appointmentDate,
+              gte: appointmentEnd
             }
           },
           {
-            OR: [
-              {
-                date: {
-                  lte: appointmentDate,
-                  gte: appointmentEnd
-                }
-              },
-              {
-                date: {
-                  lt: appointmentEnd,
-                  gt: appointmentDate
-                }
-              }
-            ]
+            date: {
+              lt: appointmentEnd,
+              gt: appointmentDate
+            }
           }
         ]
       }
@@ -158,20 +160,23 @@ export async function PUT(
 
     // Update the appointment
     const updatedAppointment = await prisma.appointment.update({
-      where: { id: Number(id) },
+      where: { id: appointmentId },
       data: {
         date: appointmentDate,
-        clientId,
-        serviceId,
-        duration: service.duration,
-        notes: notes || null
+        clientId: parseInt(finalClientId),
+        serviceId: finalServiceId,
+        duration: finalDuration,
+        price: finalPrice,
+        notes: notes || null,
       },
       include: {
         client: {
           select: {
             id: true,
             firstName: true,
-            lastName: true
+            lastName: true,
+            phone: true,
+            email: true
           }
         },
         service: {
@@ -185,19 +190,9 @@ export async function PUT(
       }
     });
 
-    console.log('Appointment updated successfully:', updatedAppointment);
-
     return NextResponse.json(updatedAppointment);
   } catch (error) {
     console.error('Error updating appointment:', error);
-    
-    if (error instanceof Error && error.message.includes('Record to update not found')) {
-      return NextResponse.json(
-        { error: 'Appointment not found' },
-        { status: 404 }
-      );
-    }
-
     return NextResponse.json(
       { error: 'Internal server error. Please try again later.' },
       { status: 500 }

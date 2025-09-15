@@ -16,22 +16,39 @@ interface ClientSearchProps {
   value: string;
   onChange: (clientId: string) => void;
   disabled?: boolean;
+  showWalkInOption?: boolean;
+  isWalkIn?: boolean;
+  onWalkInDataChange?: (data: { phone: string; email: string }) => void;
 }
 
-export default function ClientSearch({ clients, value, onChange, disabled = false }: ClientSearchProps) {
+export default function ClientSearch({ 
+  clients, 
+  value, 
+  onChange, 
+  disabled = false,
+  showWalkInOption = false,
+  isWalkIn = false,
+  onWalkInDataChange
+}: ClientSearchProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [isOpen, setIsOpen] = useState(false);
   const [displayValue, setDisplayValue] = useState('');
+  const [walkInClient, setWalkInClient] = useState({
+    phone: '',
+    email: ''
+  });
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const selectRef = useRef<HTMLSelectElement>(null);
 
   // Update display value when selected client changes
   useEffect(() => {
-    if (value) {
+    if (value === 'walk-in') {
+      setDisplayValue('Walk-In Client');
+    } else if (value) {
       const selectedClient = clients.find(client => client.id.toString() === value);
       if (selectedClient) {
         setDisplayValue(`${selectedClient.firstName} ${selectedClient.lastName} (${selectedClient.phone})`);
-        setSearchTerm(''); // Clear search term when client is selected
       }
     } else {
       setDisplayValue('');
@@ -46,9 +63,17 @@ export default function ClientSearch({ clients, value, onChange, disabled = fals
 
   const handleSelectClient = (clientId: string, clientName: string, clientPhone: string) => {
     onChange(clientId);
-    setDisplayValue(`${clientName} (${clientPhone})`);
+    setDisplayValue(clientId === 'walk-in' ? 'Walk-In Client' : `${clientName} (${clientPhone})`);
     setSearchTerm('');
     setIsOpen(false);
+    
+    // If selecting walk-in, clear any previous walk-in data
+    if (clientId === 'walk-in') {
+      setWalkInClient({ phone: '', email: '' });
+      if (onWalkInDataChange) {
+        onWalkInDataChange({ phone: '', email: '' });
+      }
+    }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -83,6 +108,22 @@ export default function ClientSearch({ clients, value, onChange, disabled = fals
     setDisplayValue('');
     if (inputRef.current) {
       inputRef.current.focus();
+    }
+  };
+
+  // Handler for walk-in phone changes
+  const handleWalkInPhoneChange = (phone: string) => {
+    setWalkInClient(prev => ({ ...prev, phone }));
+    if (onWalkInDataChange) {
+      onWalkInDataChange({ phone, email: walkInClient.email });
+    }
+  };
+
+  // Handler for walk-in email changes
+  const handleWalkInEmailChange = (email: string) => {
+    setWalkInClient(prev => ({ ...prev, email }));
+    if (onWalkInDataChange) {
+      onWalkInDataChange({ phone: walkInClient.phone, email });
     }
   };
 
@@ -130,6 +171,16 @@ export default function ClientSearch({ clients, value, onChange, disabled = fals
       {/* Dropdown menu */}
       {isOpen && (searchTerm || !value) && (
         <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+          {showWalkInOption && (
+            <div
+              className="p-2 hover:bg-gray-100 cursor-pointer border-b border-gray-100"
+              onClick={() => handleSelectClient('walk-in', 'Walk-In', 'Client')}
+            >
+              <div className="font-medium text-primary">➕ Walk-In Client</div>
+              <div className="text-sm text-gray-600">Create new client</div>
+            </div>
+          )}
+          
           {filteredClients.length === 0 ? (
             <div className="p-2 text-sm text-gray-500">No clients found</div>
           ) : (
@@ -156,12 +207,13 @@ export default function ClientSearch({ clients, value, onChange, disabled = fals
         </div>
       )}
 
-      {/* Hidden select for form submission */}
+      {/* Hidden select for form submission - FIXED: Only show required when not walk-in */}
       <select
+        ref={selectRef}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         className="hidden"
-        required
+        required={!isWalkIn} // This is the key fix
       >
         <option value="">Select a client</option>
         {clients.map(client => (

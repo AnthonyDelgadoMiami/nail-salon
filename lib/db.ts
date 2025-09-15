@@ -57,6 +57,7 @@ export const createAppointment = async (data: {
   clientId: number;
   serviceId: number;
   duration: number; 
+  price: number;
   notes?: string;
 }) => {
   try {
@@ -66,6 +67,7 @@ export const createAppointment = async (data: {
         clientId: data.clientId,
         serviceId: data.serviceId,
         duration: data.duration,
+        price: data.price,
         notes: data.notes || null
       },
       include: {

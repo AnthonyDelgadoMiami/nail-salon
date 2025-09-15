@@ -11,6 +11,7 @@ interface Appointment {
   clientId: number;
   serviceId: number;
   duration: number;
+  price: number;
   notes: string | null;
   client: {
     id: number;
@@ -137,13 +138,13 @@ export default function AppointmentDetailPage() {
                 <p>
                   <strong>Service:</strong>{" "}
                   <span className="badge badge-primary badge-sm">
-                    {appointment.service.name}
+                    {appointment.service ? appointment.service.name : 'Custom'}
                   </span>
                 </p>
                 <p>
-                  <strong>Price:</strong> ${appointment.service.price.toFixed(2)}
+                  <strong>Price:</strong> ${appointment.price.toFixed(2)}
                 </p>
-                {appointment.service.description && (
+                {appointment.service?.description && (
                   <p>
                     <strong>Description:</strong> {appointment.service.description}
                   </p>

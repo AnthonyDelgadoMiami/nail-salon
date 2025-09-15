@@ -7,6 +7,7 @@ interface Appointment {
   clientId: number;
   serviceId: number;
   duration: number;
+  price: number;
   notes: string | null;
   createdAt: Date;
   updatedAt: Date;
@@ -57,7 +58,7 @@ export default function AppointmentHistoryCard({ appointment }: AppointmentHisto
           {/* Appointment Details */}
           <div className="flex-1">
             <div className="flex flex-wrap items-center gap-2 mb-3">
-              <h3 className="card-title text-lg">{appointment.service.name}</h3>
+              <h3 className="card-title text-lg">{appointment.service ? appointment.service.name : 'Custom'}</h3>
               <span
                 className={`px-2 py-1 rounded text-xs font-semibold ${
                   isUpcoming ? "bg-green-100 text-green-800" : "bg-gray-200 text-gray-600"
@@ -78,7 +79,7 @@ export default function AppointmentHistoryCard({ appointment }: AppointmentHisto
                 <span className="font-semibold">Duration:</span> {appointment.duration} min
               </div>
               <div>
-                <span className="font-semibold">Price:</span> ${appointment.service.price.toFixed(2)}
+                <span className="font-semibold">Price:</span> ${appointment.price.toFixed(2)}
               </div>
             </div>
 

@@ -25,17 +25,30 @@ interface Appointment {
   id: number;
   date: Date;
   clientId: number;
-  serviceId: number;
+  serviceId: number | null;
   duration: number;
+  price: number;
   notes: string | null;
   client: Client;
-  service: Service;
+  service: Service | null;
 }
 
 interface AppointmentFormProps {
   appointment?: Appointment;
   clients: Client[];
   services: Service[];
+}
+
+interface WalkInClientData {
+  firstName: string;
+  lastName: string;
+  phone: string;
+  email: string;
+}
+
+interface CustomServiceData {
+  duration: number;
+  price: number;
 }
 
 export default function AppointmentForm({ appointment, clients, services }: AppointmentFormProps) {
@@ -50,6 +63,21 @@ export default function AppointmentForm({ appointment, clients, services }: Appo
     serviceId: '',
     notes: ''
   });
+  
+  const [walkInClient, setWalkInClient] = useState<WalkInClientData>({
+    firstName: '',
+    lastName: '',
+    phone: '',
+    email: ''
+  });
+
+  const [customService, setCustomService] = useState<CustomServiceData>({
+    duration: 30,
+    price: 0
+  });
+  
+  const [isWalkIn, setIsWalkIn] = useState(false);
+  const [isCustomService, setIsCustomService] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -58,13 +86,30 @@ export default function AppointmentForm({ appointment, clients, services }: Appo
   useEffect(() => {
     if (appointment) {
       const date = new Date(appointment.date);
+      
+      // Check if this is a custom service (serviceId is null)
+      const isCustom = appointment.serviceId === null;
+      
       setFormData({
         date: date.toISOString().split('T')[0],
-        time: date.toTimeString().slice(0, 5), // Gets "HH:MM" format
+        time: date.toTimeString().slice(0, 5),
         clientId: appointment.clientId.toString(),
-        serviceId: appointment.serviceId.toString(),
+        serviceId: isCustom ? '' : appointment.serviceId?.toString() || '',
         notes: appointment.notes || ''
       });
+
+      // If it's a custom service, set custom service data
+      if (isCustom) {
+        setIsCustomService(true);
+        setCustomService({
+          duration: appointment.duration,
+          price: appointment.price
+        });
+      }
+
+      // Check if this was originally a walk-in client
+      // You might need to add a way to identify walk-in clients in your data model
+      // For now, we'll assume it's not a walk-in when editing
     }
   }, [appointment]);
 
@@ -76,17 +121,48 @@ export default function AppointmentForm({ appointment, clients, services }: Appo
     }));
   };
 
-  const handleTimeChange = (time: string) => {
-    setFormData(prev => ({
+  const handleWalkInChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setWalkInClient(prev => ({
       ...prev,
-      time
+      [name]: value
+    }));
+  };
+
+  const handleCustomServiceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setCustomService(prev => ({
+      ...prev,
+      [name]: name === 'duration' || name === 'price' ? Number(value) : value
     }));
   };
 
   const handleClientChange = (clientId: string) => {
+    if (clientId === 'walk-in') {
+      setIsWalkIn(true);
+      setFormData(prev => ({ ...prev, clientId: '' }));
+    } else {
+      setIsWalkIn(false);
+      setFormData(prev => ({ ...prev, clientId }));
+    }
+  };
+
+  const handleServiceChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const { value } = e.target;
+    
+    if (value === 'custom') {
+      setIsCustomService(true);
+      setFormData(prev => ({ ...prev, serviceId: '' }));
+    } else {
+      setIsCustomService(false);
+      setFormData(prev => ({ ...prev, serviceId: value }));
+    }
+  };
+
+  const handleTimeChange = (time: string) => {
     setFormData(prev => ({
       ...prev,
-      clientId
+      time
     }));
   };
 
@@ -103,17 +179,46 @@ export default function AppointmentForm({ appointment, clients, services }: Appo
       const url = appointment ? `/api/appointments/${appointment.id}` : '/api/appointments';
       const method = appointment ? 'PUT' : 'POST';
 
+      // Prepare request data
+      let requestData: any = {
+        date: dateTime.toISOString(),
+        notes: formData.notes
+      };
+
+      // Add service data based on custom or existing service
+      if (isCustomService) {
+        // Validate custom service data
+        if (customService.duration <= 0 || customService.price < 0) {
+          throw new Error('Custom service requires positive duration and non-negative price');
+        }
+        requestData.customService = customService;
+      } else {
+        if (!formData.serviceId) {
+          throw new Error('Please select a service');
+        }
+        requestData.serviceId = parseInt(formData.serviceId);
+      }
+
+      // Add client data based on walk-in or existing client
+      if (isWalkIn) {
+        // Validate walk-in client data
+        if (!walkInClient.firstName || !walkInClient.lastName || !walkInClient.phone) {
+          throw new Error('First name, last name, and phone are required for walk-in clients');
+        }
+        requestData.walkInClient = walkInClient;
+      } else {
+        if (!formData.clientId) {
+          throw new Error('Please select a client');
+        }
+        requestData.clientId = parseInt(formData.clientId);
+      }
+
       const response = await fetch(url, {
         method,
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          date: dateTime.toISOString(),
-          clientId: parseInt(formData.clientId),
-          serviceId: parseInt(formData.serviceId),
-          notes: formData.notes
-        }),
+        body: JSON.stringify(requestData),
       });
 
       if (!response.ok) {
@@ -157,28 +262,26 @@ export default function AppointmentForm({ appointment, clients, services }: Appo
       )}
 
       <form onSubmit={handleSubmit} className="card bg-base-100 shadow-xl">
-        <div className="card-body space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Date */}
+        <div className="card-body">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="form-control">
-              <label className="label font-semibold text-sm md:text-base">
-                <span>Date *</span>
+              <label className="label font-semibold">
+                <span className="label-text">Date *</span>
               </label>
               <input
                 type="date"
                 name="date"
                 value={formData.date}
                 onChange={handleChange}
-                className="input input-bordered input-sm md:input-md"
+                className="input input-bordered"
                 required
                 disabled={isSubmitting}
               />
             </div>
 
-            {/* Time */}
             <div className="form-control">
-              <label className="label font-semibold text-sm md:text-base">
-                <span>Time *</span>
+              <label className="label font-semibold">
+                <span className="label-text">Time *</span>
               </label>
               <TimeSelect
                 value={formData.time}
@@ -187,9 +290,9 @@ export default function AppointmentForm({ appointment, clients, services }: Appo
               />
             </div>
 
-            {/* Client */}
+            {/* Client Selection */}
             <div className="form-control md:col-span-2">
-              <label className="label font-semibold text-sm md:text-base">
+              <label className="label font-semibold">
                 <span>Client *</span>
               </label>
               <ClientSearch
@@ -197,49 +300,157 @@ export default function AppointmentForm({ appointment, clients, services }: Appo
                 value={formData.clientId}
                 onChange={handleClientChange}
                 disabled={isSubmitting}
+                showWalkInOption={true}
+                isWalkIn={isWalkIn}
               />
             </div>
 
-            {/* Service */}
+            {/* Walk-In Client Form */}
+            {isWalkIn && (
+              <div className="md:col-span-2 border-l-4 border-primary pl-4 mt-2">
+                <h3 className="font-semibold text-lg mb-4">Walk-In Client Information</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="form-control">
+                    <label className="label">
+                      <span className="label-text">First Name *</span>
+                    </label>
+                    <input
+                      type="text"
+                      name="firstName"
+                      value={walkInClient.firstName}
+                      onChange={handleWalkInChange}
+                      className="input input-bordered"
+                      required
+                      disabled={isSubmitting}
+                    />
+                  </div>
+
+                  <div className="form-control">
+                    <label className="label">
+                      <span className="label-text">Last Name *</span>
+                    </label>
+                    <input
+                      type="text"
+                      name="lastName"
+                      value={walkInClient.lastName}
+                      onChange={handleWalkInChange}
+                      className="input input-bordered"
+                      required
+                      disabled={isSubmitting}
+                    />
+                  </div>
+
+                  <div className="form-control">
+                    <label className="label">
+                      <span className="label-text">Phone *</span>
+                    </label>
+                    <input
+                      type="tel"
+                      name="phone"
+                      value={walkInClient.phone}
+                      onChange={handleWalkInChange}
+                      className="input input-bordered"
+                      required
+                      disabled={isSubmitting}
+                    />
+                  </div>
+
+                  <div className="form-control">
+                    <label className="label">
+                      <span className="label-text">Email</span>
+                    </label>
+                    <input
+                      type="email"
+                      name="email"
+                      value={walkInClient.email}
+                      onChange={handleWalkInChange}
+                      className="input input-bordered"
+                      disabled={isSubmitting}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="form-control">
-              <label className="label font-semibold text-sm md:text-base">
-                <span>Service *</span>
+              <label className="label font-semibold">
+                <span className="label-text">Service *</span>
               </label>
               <select
                 name="serviceId"
-                value={formData.serviceId}
-                onChange={handleChange}
-                className="select select-bordered select-sm md:select-md"
-                required
+                value={isCustomService ? 'custom' : formData.serviceId}
+                onChange={handleServiceChange}
+                className="select select-bordered"
+                required={!isCustomService}
                 disabled={isSubmitting}
               >
                 <option value="">Select a service</option>
                 {services.map(service => (
                   <option key={service.id} value={service.id}>
-                    {service.name} (${service.price}) – {service.duration}min
+                    {service.name} (${service.price}) - {service.duration}min
                   </option>
                 ))}
+                <option value="custom">➕ Custom Service</option>
               </select>
             </div>
 
-            {/* Notes */}
+            {/* Custom Service Form */}
+            {isCustomService && (
+              <div className="md:col-span-2 border-l-4 border-secondary pl-4 mt-2">
+                <h3 className="font-semibold text-lg mb-4">Custom Service Details</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="form-control">
+                    <label className="label">
+                      <span className="label-text">Duration (minutes) *</span>
+                    </label>
+                    <input
+                      type="number"
+                      name="duration"
+                      value={customService.duration}
+                      onChange={handleCustomServiceChange}
+                      className="input input-bordered"
+                      min="1"
+                      required
+                      disabled={isSubmitting}
+                    />
+                  </div>
+
+                  <div className="form-control">
+                    <label className="label">
+                      <span className="label-text">Price ($) *</span>
+                    </label>
+                    <input
+                      type="number"
+                      name="price"
+                      value={customService.price}
+                      onChange={handleCustomServiceChange}
+                      className="input input-bordered"
+                      min="0"
+                      step="0.01"
+                      required
+                      disabled={isSubmitting}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div className="form-control md:col-span-2">
-              <label className="label font-semibold text-sm md:text-base">
-                <span>Notes</span>
+              <label className="label font-semibold">
+                <span className="label-text">Notes</span>
               </label>
               <textarea
                 name="notes"
                 value={formData.notes}
                 onChange={handleChange}
-                className="textarea textarea-bordered h-28 textarea-sm md:textarea-md"
+                className="textarea textarea-bordered h-24"
                 placeholder="Any special notes for this appointment..."
                 disabled={isSubmitting}
               />
             </div>
           </div>
 
-          {/* Actions */}
-          <div className="flex flex-col sm:flex-row gap-3 sm:justify-end pt-4 border-t">
+          <div className="card-actions justify-end mt-6">
             <button
               type="button"
               onClick={() => router.back()}
@@ -255,12 +466,12 @@ export default function AppointmentForm({ appointment, clients, services }: Appo
             >
               {isSubmitting 
                 ? (appointment ? 'Updating...' : 'Scheduling...') 
-                : (appointment ? 'Update Appointment' : 'Schedule Appointment')}
+                : (appointment ? 'Update Appointment' : 'Schedule Appointment')
+              }
             </button>
           </div>
         </div>
       </form>
-
     </div>
   );
 }

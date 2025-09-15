@@ -6,6 +6,8 @@ interface Appointment {
   date: string;
   clientId: number;
   serviceId: number;
+  duration: number;
+  price: number;
   notes: string | null;
   client: {
     id: number;
@@ -68,8 +70,8 @@ export default function AppointmentList({ appointments }: AppointmentListProps) 
               <td>
                 {appointment.client.firstName} {appointment.client.lastName}
               </td>
-              <td>{appointment.service.name}</td>
-              <td>{appointment.service.duration} min</td>
+              <td>{appointment.service ? appointment.service.name : 'Custom'}</td>
+              <td>{appointment.duration} min</td>
               <td>
                 <Link 
                   href={`/appointments/${appointment.id}`} 
