@@ -81,6 +81,7 @@ export default function AppointmentForm({ appointment, clients, services }: Appo
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [validationErrors, setValidationErrors] = useState<{phone?: string; email?: string}>({});
 
   // Pre-fill form if editing an existing appointment
   useEffect(() => {
@@ -106,10 +107,6 @@ export default function AppointmentForm({ appointment, clients, services }: Appo
           price: appointment.price
         });
       }
-
-      // Check if this was originally a walk-in client
-      // You might need to add a way to identify walk-in clients in your data model
-      // For now, we'll assume it's not a walk-in when editing
     }
   }, [appointment]);
 
@@ -127,6 +124,28 @@ export default function AppointmentForm({ appointment, clients, services }: Appo
       ...prev,
       [name]: value
     }));
+
+    // Validate if phone/email already exists
+    if (name === 'phone' || name === 'email') {
+      validateWalkInClient({ ...walkInClient, [name]: value });
+    }
+  };
+
+  const validateWalkInClient = (clientData: WalkInClientData) => {
+    const errors: {phone?: string; email?: string} = {};
+    
+    // Check if phone already exists
+    if (clientData.phone && clients.some(client => client.phone === clientData.phone)) {
+      errors.phone = 'This phone number is already registered to an existing client';
+    }
+    
+    // Check if email already exists (if email is provided)
+    if (clientData.email && clients.some(client => client.email && client.email.toLowerCase() === clientData.email.toLowerCase())) {
+      errors.email = 'This email is already registered to an existing client';
+    }
+    
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
   const handleCustomServiceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -141,6 +160,8 @@ export default function AppointmentForm({ appointment, clients, services }: Appo
     if (clientId === 'walk-in') {
       setIsWalkIn(true);
       setFormData(prev => ({ ...prev, clientId: '' }));
+      // Clear validation errors when switching to walk-in
+      setValidationErrors({});
     } else {
       setIsWalkIn(false);
       setFormData(prev => ({ ...prev, clientId }));
@@ -173,6 +194,20 @@ export default function AppointmentForm({ appointment, clients, services }: Appo
     setSuccess('');
 
     try {
+      // Validate walk-in client data if it's a walk-in
+      if (isWalkIn) {
+        // Validate required fields
+        if (!walkInClient.firstName || !walkInClient.lastName || !walkInClient.phone) {
+          throw new Error('First name, last name, and phone are required for walk-in clients');
+        }
+
+        // Validate that phone/email doesn't already exist
+        const isValid = validateWalkInClient(walkInClient);
+        if (!isValid) {
+          throw new Error('Please fix the validation errors before submitting');
+        }
+      }
+
       // Combine date and time
       const dateTime = new Date(`${formData.date}T${formData.time}`);
       
@@ -201,10 +236,6 @@ export default function AppointmentForm({ appointment, clients, services }: Appo
 
       // Add client data based on walk-in or existing client
       if (isWalkIn) {
-        // Validate walk-in client data
-        if (!walkInClient.firstName || !walkInClient.lastName || !walkInClient.phone) {
-          throw new Error('First name, last name, and phone are required for walk-in clients');
-        }
         requestData.walkInClient = walkInClient;
       } else {
         if (!formData.clientId) {
@@ -353,6 +384,9 @@ export default function AppointmentForm({ appointment, clients, services }: Appo
                       required
                       disabled={isSubmitting}
                     />
+                    {validationErrors.phone && (
+                      <div className="text-error text-sm mt-1">{validationErrors.phone}</div>
+                    )}
                   </div>
 
                   <div className="form-control">
@@ -367,6 +401,9 @@ export default function AppointmentForm({ appointment, clients, services }: Appo
                       className="input input-bordered"
                       disabled={isSubmitting}
                     />
+                    {validationErrors.email && (
+                      <div className="text-error text-sm mt-1">{validationErrors.email}</div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -462,7 +499,7 @@ export default function AppointmentForm({ appointment, clients, services }: Appo
             <button
               type="submit"
               className="btn btn-primary"
-              disabled={isSubmitting}
+              disabled={isSubmitting || Object.keys(validationErrors).length > 0}
             >
               {isSubmitting 
                 ? (appointment ? 'Updating...' : 'Scheduling...') 
