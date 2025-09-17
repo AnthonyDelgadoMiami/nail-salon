@@ -4,6 +4,16 @@ import { PrismaClient } from '@prisma/client'
 const prisma = new PrismaClient()
 
 async function main() {
+  const user = await Promise.all([
+    prisma.user.create({
+      data: {
+        name: 'Admin User',
+        email: 'admin@salon.test',
+        password: 'admin123', 
+        role: 'ADMIN'
+      }
+    })
+  ])
   // Create default services
   const services = await Promise.all([
     prisma.service.create({
