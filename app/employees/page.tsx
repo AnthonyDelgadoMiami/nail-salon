@@ -1,4 +1,7 @@
+//app/employees/page.tsx
 import { PrismaClient } from "@prisma/client";
+import EmployeesTable from "../components/Employees/EmployeesTable";
+import Link from "next/link";
 
 const prisma = new PrismaClient();
 
@@ -9,29 +12,13 @@ export default async function EmployeesPage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-6">Employees</h1>
-      <div className="overflow-x-auto">
-        <table className="table w-full">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Email</th>
-              <th>Role</th>
-              <th>Joined</th>
-            </tr>
-          </thead>
-          <tbody>
-            {employees.map((emp) => (
-              <tr key={emp.id}>
-                <td>{emp.name}</td>
-                <td>{emp.email}</td>
-                <td>{emp.role}</td>
-                <td>{emp.createdAt.toDateString()}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold">Employees</h1>
+        <Link href="/employees/new" className="btn btn-primary">
+          + New Employee
+        </Link>
       </div>
+      <EmployeesTable employees={employees} />
     </div>
   );
 }
