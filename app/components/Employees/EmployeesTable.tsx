@@ -1,9 +1,10 @@
 //app/components/Employees/EmployeesTable
 "use client";
-
+import Link from "next/link";
 import { useState } from "react";
+  
 
-interface Employee {
+interface User {
   id: number;
   name: string;
   email: string;
@@ -12,11 +13,11 @@ interface Employee {
 }
 
 interface Props {
-  employees: Employee[];
+  employees: User[];
 }
 
 export default function EmployeesTable({ employees: initialEmployees }: Props) {
-  const [employees, setEmployees] = useState<Employee[]>(initialEmployees);
+  const [employees, setEmployees] = useState<User[]>(initialEmployees);
 
   async function deleteEmployee(id: number) {
     if (!confirm("Are you sure you want to delete this employee?")) return;
@@ -46,6 +47,9 @@ export default function EmployeesTable({ employees: initialEmployees }: Props) {
               <td>{emp.role}</td>
               <td>{emp.createdAt.toDateString()}</td>
               <td className="text-right space-x-2">
+                <Link href={`/employees/${emp.id}`} className="btn btn-sm btn-ghost">
+                  View Details
+                </Link>
                 <button
                   className="btn btn-sm btn-outline"
                   onClick={() =>

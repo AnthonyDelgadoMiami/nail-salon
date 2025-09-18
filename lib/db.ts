@@ -42,7 +42,7 @@ export const getAppointments = async (date?: Date) => {
             duration: true,
             price: true
           }
-        }
+        },
       },
       orderBy: { date: 'asc' }
     });
@@ -56,6 +56,7 @@ export const createAppointment = async (data: {
   date: Date;
   clientId: number;
   serviceId: number;
+  userId: number;
   duration: number; 
   price: number;
   notes?: string;
@@ -66,6 +67,7 @@ export const createAppointment = async (data: {
         date: data.date,
         clientId: data.clientId,
         serviceId: data.serviceId,
+        userId: data.userId,
         duration: data.duration,
         price: data.price,
         notes: data.notes || null
@@ -179,6 +181,14 @@ export async function getAppointment(id: number) {
             name: true,
             duration: true,
             price: true
+          }
+        },
+        user: { 
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            role: true
           }
         }
       }
@@ -357,5 +367,83 @@ export async function getClientAppointments(clientId: number) {
   } catch (error) {
     console.error('Error fetching client appointments:', error);
     return [];
+  }
+}
+
+export async function getUsers() {
+  try {
+    const users = await prisma.user.findMany({
+      orderBy: { name: 'asc' }
+    });
+    return users;
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    return [];
+  }
+}
+
+export async function getUser(id: number) {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        createdAt: true,
+        updatedAt: true
+      }
+    });
+    return user;
+  } catch (error) {
+    console.error('Error fetching user:', error);
+    return null;
+  }
+}
+
+export async function getEmployeeStats(employeeId: number) {
+  try {
+    const today = new Date();
+    const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const endOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
+
+    const [totalAppointments, thisMonthAppointments, todayAppointments] = await Promise.all([
+      prisma.appointment.count({
+        where: { userId: employeeId }
+      }),
+      prisma.appointment.count({
+        where: {
+          userId: employeeId,
+          date: {
+            gte: startOfMonth,
+            lt: today
+          }
+        }
+      }),
+      prisma.appointment.count({
+        where: {
+          userId: employeeId,
+          date: {
+            gte: startOfDay,
+            lt: endOfDay
+          }
+        }
+      })
+    ]);
+
+    return {
+      totalAppointments,
+      thisMonthAppointments,
+      todayAppointments
+    };
+  } catch (error) {
+    console.error('Error fetching employee stats:', error);
+    return {
+      totalAppointments: 0,
+      thisMonthAppointments: 0,
+      todayAppointments: 0
+    };
   }
 }

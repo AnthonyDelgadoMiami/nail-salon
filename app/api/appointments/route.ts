@@ -73,9 +73,15 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { date, clientId, serviceId, notes, walkInClient, customService } = body;
+    const { date, notes, clientId, serviceId, customService, walkInClient, userId } = body;
 
     console.log('Received appointment data:', body);
+
+    // Validate required fields
+    if (!userId) {
+      return NextResponse.json({ error: 'Staff member is required' }, { status: 400 });
+    }
+
 
     // Validate required fields
     if (!date) {
@@ -236,6 +242,7 @@ export async function POST(request: NextRequest) {
         date: appointmentDate,
         clientId: parseInt(finalClientId),
         serviceId: finalServiceId,
+        userId: parseInt(userId),
         duration: finalDuration,
         price: finalPrice,
         notes: finalNotes || null,
@@ -257,9 +264,15 @@ export async function POST(request: NextRequest) {
             duration: true,
             price: true
           }
+        },
+        user: { 
+          select: {
+            id: true,
+            name: true,
+            email: true
+          }
         }
-      }
-    });
+    }});
 
     console.log('Appointment created successfully:', appointment);
     return NextResponse.json(appointment, { status: 201 });

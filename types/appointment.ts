@@ -19,6 +19,7 @@ export interface Appointment {
   date: Date;
   clientId: number;
   serviceId: number;
+  userId: number;
   duration: number;
   notes: string | null;
   createdAt: Date;

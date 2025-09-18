@@ -27,6 +27,12 @@ interface Appointment {
     duration: number;
     price: number;
   };
+  user: { 
+    id: number;
+    name: string;
+    email: string;
+    role: string;
+  };
 }
 
 export default function AppointmentDetailPage() {
@@ -121,7 +127,7 @@ export default function AppointmentDetailPage() {
           </h2>
 
           {/* Info Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Appointment Info */}
             <div>
               <h3 className="font-semibold text-lg mb-3">Appointment Info</h3>
@@ -173,6 +179,31 @@ export default function AppointmentDetailPage() {
                   className="btn btn-sm btn-outline mt-3"
                 >
                   View Client
+                </Link>
+              </div>
+            </div>
+
+            {/* Staff Info */}
+            <div>
+              <h3 className="font-semibold text-lg mb-3">Staff Member</h3>
+              <div className="space-y-2 text-sm">
+                <p>
+                  <strong>Name:</strong> {appointment.user?.name}
+                </p>
+                <p>
+                  <strong>Email:</strong> {appointment.user?.email}
+                </p>
+                <p>
+                  <strong>Role:</strong>{" "}
+                  <span className="badge badge-secondary badge-sm capitalize">
+                    {appointment.user?.role}
+                  </span>
+                </p>
+                <Link
+                  href={`/clients/${appointment.user?.id}`}
+                  className="btn btn-sm btn-outline mt-3"
+                >
+                  View Employee
                 </Link>
               </div>
             </div>

@@ -4,14 +4,14 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-interface Employee {
+interface User {
   id: number;
   name: string;
   email: string;
   role: string;
 }
 
-export default function EditEmployeeForm({ employee }: { employee: Employee }) {
+export default function EditEmployeeForm({ employee }: { employee: User }) {
   const router = useRouter();
   const [form, setForm] = useState({ ...employee, password: "" });
 

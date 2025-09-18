@@ -7,22 +7,20 @@ interface RouteParams {
 }
 
 export async function GET(
-  request: NextRequest,
-  { params }: RouteParams
+  request: Request,
+  { params }: { params: { id: string } }
 ) {
   try {
-    const { id } = await params;
-
     const appointment = await prisma.appointment.findUnique({
-      where: { id: Number(id) },
+      where: { id: parseInt(params.id) },
       include: {
         client: {
           select: {
             id: true,
             firstName: true,
             lastName: true,
-            phone: true, 
-            email: true 
+            phone: true,
+            email: true
           }
         },
         service: {
@@ -32,6 +30,14 @@ export async function GET(
             description: true,
             duration: true,
             price: true
+          }
+        },
+        user: { // Add this include
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            role: true
           }
         }
       }
@@ -48,7 +54,7 @@ export async function GET(
   } catch (error) {
     console.error('Error fetching appointment:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Failed to fetch appointment' },
       { status: 500 }
     );
   }

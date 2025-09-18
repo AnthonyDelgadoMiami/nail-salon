@@ -5,6 +5,14 @@ import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import TimeSelect from './TimeSelect';
 import ClientSearch from './ClientSearch';
+import UserSearch from './UserSearch';
+
+interface User {
+  id: number;
+  name: string;
+  email: string;
+  role: string;
+}
 
 interface Client {
   id: number;
@@ -29,14 +37,17 @@ interface Appointment {
   duration: number;
   price: number;
   notes: string | null;
+  userId: number;
   client: Client;
   service: Service | null;
+  user: User;
 }
 
 interface AppointmentFormProps {
   appointment?: Appointment;
   clients: Client[];
   services: Service[];
+  users: User[];
 }
 
 interface WalkInClientData {
@@ -51,7 +62,7 @@ interface CustomServiceData {
   price: number;
 }
 
-export default function AppointmentForm({ appointment, clients, services }: AppointmentFormProps) {
+export default function AppointmentForm({ appointment, clients, services, users }: AppointmentFormProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const defaultClientId = searchParams.get('clientId');
@@ -61,6 +72,7 @@ export default function AppointmentForm({ appointment, clients, services }: Appo
     time: '',
     clientId: defaultClientId || '',
     serviceId: '',
+    userId: '',
     notes: ''
   });
   
@@ -96,6 +108,7 @@ export default function AppointmentForm({ appointment, clients, services }: Appo
         time: date.toTimeString().slice(0, 5),
         clientId: appointment.clientId.toString(),
         serviceId: isCustom ? '' : appointment.serviceId?.toString() || '',
+        userId: appointment.userId.toString(),
         notes: appointment.notes || ''
       });
 
@@ -115,6 +128,13 @@ export default function AppointmentForm({ appointment, clients, services }: Appo
     setFormData(prev => ({
       ...prev,
       [name]: value
+    }));
+  };
+
+  const handleUserChange = (userId: string) => {
+    setFormData(prev => ({
+      ...prev,
+      userId
     }));
   };
 
@@ -217,7 +237,8 @@ export default function AppointmentForm({ appointment, clients, services }: Appo
       // Prepare request data
       let requestData: any = {
         date: dateTime.toISOString(),
-        notes: formData.notes
+        notes: formData.notes,
+        userId: parseInt(formData.userId)
       };
 
       // Add service data based on custom or existing service
@@ -471,6 +492,18 @@ export default function AppointmentForm({ appointment, clients, services }: Appo
                 </div>
               </div>
             )}
+
+            <div className="form-control">
+              <label className="label font-semibold">
+                <span className="label-text">Staff Member *</span>
+              </label>
+              <UserSearch
+                users={users}
+                value={formData.userId}
+                onChange={handleUserChange}
+                disabled={isSubmitting}
+              />
+            </div>
 
             <div className="form-control md:col-span-2">
               <label className="label font-semibold">
