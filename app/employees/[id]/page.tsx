@@ -109,14 +109,8 @@ export default async function EmployeeDetailPage({ params }: PageProps) {
         <div className="card-body">
           <h3 className="card-title">Actions</h3>
           <div className="flex flex-wrap gap-4">
-            <Link href={`/appointments?employee=${employee.id}`} className="btn btn-primary">
+            <Link href={`/employees/${employee.id}/appointments`} className="btn btn-primary">
               View All Appointments
-            </Link>
-            <Link href={`/employees/${employee.id}/schedule`} className="btn btn-secondary">
-              View Schedule
-            </Link>
-            <Link href={`/employees/${employee.id}/performance`} className="btn btn-info">
-              Performance Report
             </Link>
           </div>
         </div>

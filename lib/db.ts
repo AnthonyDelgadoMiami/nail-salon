@@ -457,3 +457,38 @@ export async function getEmployeeStats(employeeId: number) {
     };
   }
 }
+
+export async function getEmployeeAppointments(userId: number) {
+  return prisma.appointment.findMany({
+    where: { userId },
+    include: {
+      service: {
+        select: {
+          id: true,
+          name: true,
+          description: true,
+          duration: true,
+          price: true,
+        },
+      },
+      user: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+        },
+      },
+      client: {
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          phone: true,
+          email: true,
+        },
+      },
+    },
+    orderBy: { date: "desc" },
+  });
+}
