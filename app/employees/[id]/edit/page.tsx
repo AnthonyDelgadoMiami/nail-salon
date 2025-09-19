@@ -5,7 +5,8 @@ import EditEmployeeForm from "../../../components/Employees/EditEmployeeForm";
 const prisma = new PrismaClient();
 
 export default async function EditEmployeePage({ params }: { params: { id: string } }) {
-  const employee = await prisma.user.findUnique({ where: { id: parseInt(params.id, 10) } });
+  const { id } = await params;
+  const employee = await prisma.user.findUnique({ where: { id: parseInt(id, 10) } });
 
   if (!employee) return <div>Employee not found</div>;
 

@@ -14,6 +14,13 @@ export interface Service {
   price: number;
 }
 
+export interface User {
+  id: number;
+  name: string;
+  email: string;
+  role: string;
+}
+
 export interface Appointment {
   id: number;
   date: Date;
@@ -25,5 +32,6 @@ export interface Appointment {
   createdAt: Date;
   updatedAt: Date;
   client: Client;
-  service: Service;
+  service: Service | null;
+  user: User | null;
 }

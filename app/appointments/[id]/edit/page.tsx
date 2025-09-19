@@ -9,11 +9,17 @@ interface PageProps {
 
 export default async function EditAppointmentPage({ params }: PageProps) {
   const { id } = await params;
-  const appointment = await getAppointment(Number(id));
+  const appointmentRaw = await getAppointment(Number(id));
   
-  if (!appointment) {
+  if (!appointmentRaw) {
     notFound();
   }
+
+  // Ensure userId is a number (not null)
+  const appointment = appointmentRaw && {
+    ...appointmentRaw,
+    userId: appointmentRaw.userId ?? 0, // fallback to 0 or handle appropriately
+  };
 
   const [clients, services, users] = await Promise.all([
     getClients(),

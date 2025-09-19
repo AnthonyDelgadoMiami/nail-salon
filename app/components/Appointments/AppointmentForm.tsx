@@ -40,7 +40,7 @@ interface Appointment {
   userId: number;
   client: Client;
   service: Service | null;
-  user: User;
+  user: User | null;
 }
 
 interface AppointmentFormProps {

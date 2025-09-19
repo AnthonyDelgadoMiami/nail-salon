@@ -1,5 +1,5 @@
 // app/employees/[id]/page.tsx
-import { getUser } from "@/lib/db";
+import { getUser, getEmployeeStats } from "@/lib/db";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -17,6 +17,8 @@ export default async function EmployeeDetailPage({ params }: PageProps) {
 
   // Get employee statistics (appointment count, etc.)
   const stats = await getEmployeeStats(Number(id));
+
+  console.log(stats)
 
   return (
     <div className="container mx-auto p-4">
@@ -121,19 +123,4 @@ export default async function EmployeeDetailPage({ params }: PageProps) {
       </div>
     </div>
   );
-}
-
-// Helper function to get employee statistics
-async function getEmployeeStats(employeeId: number) {
-  // You'll need to implement these database queries
-  const today = new Date();
-  const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-  const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-  
-  // These are placeholder values - implement actual database queries
-  return {
-    totalAppointments: 0,
-    thisMonthAppointments: 0,
-    todayAppointments: 0
-  };
 }

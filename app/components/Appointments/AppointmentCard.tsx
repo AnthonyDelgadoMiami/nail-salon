@@ -11,6 +11,12 @@ interface Appointment {
   service: {
     name: string;
   };
+  user: {
+    id: number;
+    name: string;
+    email: string;
+    role: string;
+  }
 }
 
 interface AppointmentCardProps {

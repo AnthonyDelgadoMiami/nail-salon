@@ -1,11 +1,35 @@
 // app/components/Clients/AppointmentHistoryCard.tsx
 import Link from 'next/link';
 
+interface Service {
+  id: number;
+  name: string;
+  description: string | null;
+  duration: number;
+  price: number;
+}
+
+interface User {
+  id: number;
+  name: string;
+  email: string;
+  role: string;
+}
+
+interface Client {
+  id: number;
+  firstName: string;
+  lastName: string;
+  phone: string;
+  email: string | null;
+}
+
 interface Appointment {
   id: number;
   date: Date;
   clientId: number;
-  serviceId: number;
+  serviceId: number | null;
+  userId: number | null;
   duration: number;
   price: number;
   notes: string | null;
@@ -14,9 +38,16 @@ interface Appointment {
   service: {
     id: number;
     name: string;
+    description: string | null;
     duration: number;
     price: number;
-  };
+  } | null;
+  user: {
+    id: number;
+    name: string;
+    email: string;
+    role: string;
+  } | null;
 }
 
 interface AppointmentHistoryCardProps {
